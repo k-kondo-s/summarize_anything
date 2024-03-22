@@ -7,18 +7,18 @@ from dotenv import load_dotenv
 
 from executor import ExecutorBuilder
 
+# https://github.com/Rapptz/discord.py/discussions/9726#discussioncomment-8416217
+# class GatewayEventFilter(logging.Filter):
+#     def __init__(self) -> None:
+#         super().__init__("discord.gateway")
 
-class GatewayEventFilter(logging.Filter):
-    def __init__(self) -> None:
-        super().__init__("discord.gateway")
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        if record.exc_info is not None and isinstance(record.exc_info[1], discord.ConnectionClosed):
-            return False
-        return True
+#     def filter(self, record: logging.LogRecord) -> bool:
+#         if record.exc_info is not None and isinstance(record.exc_info[1], discord.ConnectionClosed):
+#             return False
+#         return True
 
 
-logging.getLogger("discord.gateway").addFilter(GatewayEventFilter())
+# logging.getLogger("discord.gateway").addFilter(GatewayEventFilter())
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
