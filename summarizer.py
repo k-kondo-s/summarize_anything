@@ -20,7 +20,7 @@ PROMPT_TEXT_SUMMARIER = """
 """
 
 
-class _TextSummarizer:
+class TextSummarizer:
     def __init__(self):
         self.prompt = ChatPromptTemplate.from_template(PROMPT_TEXT_SUMMARIER)
         self.model = ChatAnthropic(model="claude-3-opus-20240229", temperature=0)
@@ -38,7 +38,7 @@ class BaseSummarizer(ABC):
 
 
 class WebSummarizer(BaseSummarizer):
-    def __init__(self, text_summarizer: _TextSummarizer) -> None:
+    def __init__(self, text_summarizer: TextSummarizer) -> None:
         self.text_summrizer = text_summarizer
 
     def _reqest_get(self, url: str) -> str:
@@ -60,7 +60,7 @@ class WebSummarizer(BaseSummarizer):
 
 
 class YouTubeSummarizer(BaseSummarizer):
-    def __init__(self, text_summrizer: _TextSummarizer) -> None:
+    def __init__(self, text_summrizer: TextSummarizer) -> None:
         self.text_summrizer = text_summrizer
 
     def _get_video_id(self, url: str) -> str:
@@ -89,7 +89,7 @@ class YouTubeSummarizer(BaseSummarizer):
 
 
 class ArXivSummarizer(BaseSummarizer):
-    def __init__(self, text_summrizer: _TextSummarizer) -> None:
+    def __init__(self, text_summrizer: TextSummarizer) -> None:
         self.text_summrizer = text_summrizer
 
     def _modify_arxiv_url(self, url: str) -> str:
@@ -123,7 +123,7 @@ class ArXivSummarizer(BaseSummarizer):
 class SummarizerBuilder:
 
     def build_summarizer(self, method: str) -> BaseSummarizer | None:
-        text_summarizer = _TextSummarizer()
+        text_summarizer = TextSummarizer()
         summerizer_map = {
             MethodType.WEB.value: WebSummarizer(text_summarizer),
             MethodType.YOUTUBE.value: YouTubeSummarizer(text_summarizer),

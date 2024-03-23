@@ -1,7 +1,7 @@
 import logging
 
 from router import Router
-from summarizer import SummarizerBuilder
+from summarizer import SummarizerBuilder, TextSummarizer
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,19 @@ class Executor:
         return None
 
 
+class SimpleExecutor:
+    def __init__(self, summerizer: TextSummarizer) -> None:
+        self.summerizer = summerizer
+
+    def execute(self, text: str) -> str:
+        return self.summerizer.summarize(text)
+
+
 class ExecutorBuilder:
     @staticmethod
     def build() -> Executor:
         return Executor(SummarizerBuilder(), Router())
+
+    @staticmethod
+    def build_simple() -> SimpleExecutor:
+        return SimpleExecutor(TextSummarizer())

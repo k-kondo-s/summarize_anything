@@ -1,6 +1,6 @@
 import pytest
 
-from summarizer import WebSummarizer, _TextSummarizer
+from summarizer import TextSummarizer, WebSummarizer
 
 
 @pytest.mark.parametrize(
@@ -12,7 +12,7 @@ from summarizer import WebSummarizer, _TextSummarizer
 )
 def test_request_get(url):
     # Arrange
-    summarizer = WebSummarizer(_TextSummarizer())
+    summarizer = WebSummarizer(TextSummarizer())
 
     # Act
     result = summarizer._reqest_get(url)
@@ -24,7 +24,7 @@ def test_request_get(url):
 def test_arxiv_summarizer():
     """ArXivSummarizer の summarize が正常終了するか"""
     # Arrange
-    summarizer = WebSummarizer(_TextSummarizer())
+    summarizer = WebSummarizer(TextSummarizer())
 
     # Act
     result = summarizer.summarize("https://arxiv.org/abs/2202.12493")
