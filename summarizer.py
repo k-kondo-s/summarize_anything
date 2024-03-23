@@ -42,14 +42,14 @@ class WebSummarizer(BaseSummarizer):
         self.text_summrizer = text_summarizer
 
     def _reqest_get(self, url: str) -> str:
-        """与えられた URL に GET リクエストを送りそのページの body を取得する"""
+        """Send a GET request to the given URL and retrieve the body of the page."""
         response = requests.get(url)
         html_content = response.text
 
-        # BeautifulSoupオブジェクトを作成
+        # Create a BeautifulSoup object
         soup = BeautifulSoup(html_content, "html.parser")
 
-        # ボディテキストを取得
+        # Get the body text
         body_text = soup.get_text()
 
         return body_text
@@ -60,8 +60,8 @@ class WebSummarizer(BaseSummarizer):
 
 
 class YouTubeSummarizer(BaseSummarizer):
-    def __init__(self, text_summrizer: TextSummarizer) -> None:
-        self.text_summrizer = text_summrizer
+    def __init__(self, text_summarizer: TextSummarizer) -> None:
+        self.text_summrizer = text_summarizer
 
     def _get_video_id(self, url: str) -> str:
         # いくつか異なる形式の URL に対応する
@@ -89,8 +89,8 @@ class YouTubeSummarizer(BaseSummarizer):
 
 
 class ArXivSummarizer(BaseSummarizer):
-    def __init__(self, text_summrizer: TextSummarizer) -> None:
-        self.text_summrizer = text_summrizer
+    def __init__(self, text_summarizer: TextSummarizer) -> None:
+        self.text_summrizer = text_summarizer
 
     def _modify_arxiv_url(self, url: str) -> str:
         """
