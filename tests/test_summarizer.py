@@ -19,3 +19,16 @@ def test_request_get(url):
 
     # Assert
     assert len(result) > 0
+
+
+def test_arxiv_summarizer():
+    """ArXivSummarizer の summarize が正常終了するか"""
+    # Arrange
+    summarizer = WebSummarizer(_TextSummarizer())
+
+    # Act
+    result = summarizer.summarize("https://arxiv.org/abs/2202.12493")
+    print(result)
+
+    # Assert
+    assert len(result) > 0

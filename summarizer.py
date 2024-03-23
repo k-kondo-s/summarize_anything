@@ -88,6 +88,38 @@ class YouTubeSummarizer(BaseSummarizer):
         return self.text_summrizer.summarize(content)
 
 
+class ArXivSummarizer(BaseSummarizer):
+    def __init__(self, text_summrizer: _TextSummarizer) -> None:
+        self.text_summrizer = text_summrizer
+
+    def _modify_arxiv_url(self, url: str) -> str:
+        """
+        https://ar5iv.labs.arxiv.org/
+        に習って、 arXiv の URL を変換して HTML のページを見られるようにする
+
+           https://arxiv.org/abs/1910.06709
+        -> https://ar5iv.org/abs/1910.06709
+        """
+        return url.replace("arxiv.org", "ar5iv.org")
+
+    def _get_arxiv_content(self, url: str) -> str:
+        response = requests.get(url)
+        html_content = response.text
+
+        # BeautifulSoupオブジェクトを作成
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        # ボディテキストを取得
+        body_text = soup.get_text()
+
+        return body_text
+
+    def summarize(self, url: str) -> str:
+        modified_url = self._modify_arxiv_url(url)
+        body_text = self._get_arxiv_content(modified_url)
+        return self.text_summrizer.summarize(body_text)
+
+
 class SummarizerBuilder:
 
     def build_summarizer(self, method: str) -> BaseSummarizer | None:
@@ -95,6 +127,7 @@ class SummarizerBuilder:
         summerizer_map = {
             MethodType.WEB.value: WebSummarizer(text_summarizer),
             MethodType.YOUTUBE.value: YouTubeSummarizer(text_summarizer),
+            MethodType.ARXIV.value: ArXivSummarizer(text_summarizer),
             MethodType.NONE.value: None,
         }
         return summerizer_map[method]

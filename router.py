@@ -22,8 +22,8 @@ output: False, "", "None"
 comment: https://www.youtube.com/watch?v=123456
 output: True, "https://www.youtube.com/watch?v=123456", YouTube
 
-comment: https://speakerdeck.com/snoozer05/software-architecture-metrics-in-a-nutshell
-output: True, "https://speakerdeck.com/snoozer05/software-architecture-metrics-in-a-nutshell", Web
+comment: 良い論文だ https://arxiv.org/abs/2202.12493
+output: True, "https://arxiv.org/abs/2202.12493", arXiv
 
 comment: https://qiita.com/kenji-kondo/items/91ae417ad858ec4652e7 これは僕が書いたやつ
 output: True, "https://qiita.com/kenji-kondo/items/91ae417ad858ec4652e7", Web
