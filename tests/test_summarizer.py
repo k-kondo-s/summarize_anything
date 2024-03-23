@@ -1,6 +1,7 @@
 import pytest
 
 from summarizer import TextSummarizer, WebSummarizer
+from tests.data import long_long_text
 
 
 @pytest.mark.parametrize(
@@ -32,3 +33,16 @@ def test_arxiv_summarizer():
 
     # Assert
     assert len(result) > 0
+
+
+def test_summarize_at_the_end():
+    """最後まで途切れないか"""
+    # Arrange
+    summarizer = TextSummarizer()
+
+    # Act
+    result = summarizer.summarize(long_long_text)
+
+    # Assert。とりあえず今は 1024 であるかどうか。
+    # ここは LLM を用いて「文章が途中で切れてないか」を確かめさせるのがいいだろうな。
+    assert len(result) > 1024

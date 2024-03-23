@@ -23,7 +23,8 @@ PROMPT_TEXT_SUMMARIER = """
 class TextSummarizer:
     def __init__(self):
         self.prompt = ChatPromptTemplate.from_template(PROMPT_TEXT_SUMMARIER)
-        self.model = ChatAnthropic(model="claude-3-opus-20240229", temperature=0)
+        # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2048 に設定する。
+        self.model = ChatAnthropic(model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=2048)
         self.output_parser = StrOutputParser()
         self.chain = self.prompt | self.model | self.output_parser
 
