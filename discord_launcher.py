@@ -29,7 +29,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-DISCORD_ALLOWED_CHANNEL_ID: int = int(os.getenv("DISCORD_ALLOWED_CHANNEL_ID"))
+DISCORD_ALLOWED_CHANNEL_ID_LIST: list[int] = [int(i) for i in os.getenv("DISCORD_ALLOWED_CHANNEL_ID_LIST").split(",")]
+print(DISCORD_ALLOWED_CHANNEL_ID_LIST)
 DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN")
 
 executor = ExecutorBuilder.build()
@@ -45,7 +46,7 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.channel.id == DISCORD_ALLOWED_CHANNEL_ID:
+    if message.channel.id in DISCORD_ALLOWED_CHANNEL_ID_LIST:
         logger.info(f"Received message: {message.clean_content}")
         try:
             result_text = executor.execute(message.clean_content)
