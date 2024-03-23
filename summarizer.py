@@ -12,12 +12,17 @@ from method_type import MethodType
 
 logger = logging.getLogger(__name__)
 
+PROMPT_TEXT_SUMMARIER = """
+文章を日本語で要約して。要約の仕方は、複数のポイントに対してそれぞれ詳しく説明するかんじ。
+「ポイント1」「ポイント2」という具合に:
+---
+{input}
+"""
+
 
 class _TextSummarizer:
     def __init__(self):
-        self.prompt = ChatPromptTemplate.from_template(
-            """文章を日本語で要約して。要約の仕方は、複数のポイントに対してそれぞれ詳しく説明するかんじ:\n{input}"""
-        )
+        self.prompt = ChatPromptTemplate.from_template(PROMPT_TEXT_SUMMARIER)
         self.model = ChatAnthropic(model="claude-3-opus-20240229", temperature=0)
         self.output_parser = StrOutputParser()
         self.chain = self.prompt | self.model | self.output_parser
