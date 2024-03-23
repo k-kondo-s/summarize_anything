@@ -7,18 +7,19 @@ from dotenv import load_dotenv
 
 from executor import ExecutorBuilder
 
+
 # https://github.com/Rapptz/discord.py/discussions/9726#discussioncomment-8416217
-# class GatewayEventFilter(logging.Filter):
-#     def __init__(self) -> None:
-#         super().__init__("discord.gateway")
+class GatewayEventFilter(logging.Filter):
+    def __init__(self) -> None:
+        super().__init__("discord.gateway")
 
-#     def filter(self, record: logging.LogRecord) -> bool:
-#         if record.exc_info is not None and isinstance(record.exc_info[1], discord.ConnectionClosed):
-#             return False
-#         return True
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.exc_info is not None and isinstance(record.exc_info[1], discord.ConnectionClosed):
+            return False
+        return True
 
 
-# logging.getLogger("discord.gateway").addFilter(GatewayEventFilter())
+logging.getLogger("discord.gateway").addFilter(GatewayEventFilter())
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
@@ -46,10 +47,16 @@ async def on_message(message):
 
     if message.channel.id == DISCORD_ALLOWED_CHANNEL_ID:
         logger.info(f"Received message: {message.clean_content}")
-        executor_result = executor.execute(message.clean_content)
-        logger.info(f"Executor result: {executor_result}")
-        if executor_result:
-            await message.reply(executor_result)
+        try:
+            result_text = executor.execute(message.clean_content)
+            logger.info(f"Executor result text: {result_text}")
+            if result_text:
+                await message.reply(result_text)
+        except discord.errors.ConnectionClosed:
+            pass
+        except Exception as e:
+            logger.error(f"Error occurred: {e}")
+            await message.reply(f"Error occurred. Details:\n{e.args}")
 
 
 client.run(DISCORD_BOT_TOKEN)

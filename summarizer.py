@@ -50,7 +50,7 @@ class WebSummarizer(BaseSummarizer):
         soup = BeautifulSoup(html_content, "html.parser")
 
         # ボディテキストを取得
-        body_text = soup.body.get_text(strip=True)
+        body_text = soup.get_text()
 
         return body_text
 
