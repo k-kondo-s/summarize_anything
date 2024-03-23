@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 
 import requests
@@ -9,13 +10,15 @@ from youtube_transcript_api import YouTubeTranscriptApi
 
 from method_type import MethodType
 
+logger = logging.getLogger(__name__)
+
 
 class _TextSummarizer:
     def __init__(self):
         self.prompt = ChatPromptTemplate.from_template(
             """文章を日本語で要約して。要約の仕方は、複数のポイントに対してそれぞれ詳しく説明するかんじ:\n{input}"""
         )
-        self.model = ChatAnthropic(model="claude-3-opus-20240229")
+        self.model = ChatAnthropic(model="claude-3-opus-20240229", temperature=0)
         self.output_parser = StrOutputParser()
         self.chain = self.prompt | self.model | self.output_parser
 
@@ -55,8 +58,20 @@ class YouTubeSummarizer(BaseSummarizer):
     def __init__(self, text_summrizer: _TextSummarizer) -> None:
         self.text_summrizer = text_summrizer
 
+    def _get_video_id(self, url: str) -> str:
+        # いくつか異なる形式の URL に対応する
+        # まず https://www.youtube.com/watch?v=xxxxx 形式の URL から video_id を取得する
+        if "v=" in url:
+            return url.split("v=")[1]
+        # 次に https://youtu.be/xxxxx 形式の URL から video_id を取得する
+        if "youtu.be" in url:
+            return url.split("/")[-1]
+        # どちらの形式でもない場合は例外を発生させる
+        logger.error(f"Invalid URL format: {url}")
+        raise ValueError(f"Invalid URL format: {url}")
+
     def _get_youtube_content(self, url: str) -> str:
-        video_id = url.split("v=")[1]
+        video_id = self._get_video_id(url)
         transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["ja", "en"])
         content = ""
         for i in transcript:
@@ -65,7 +80,7 @@ class YouTubeSummarizer(BaseSummarizer):
 
     def summarize(self, url: str) -> str:
         content = self._get_youtube_content(url)
-        return self.summarize_chain.summarize(content)
+        return self.text_summrizer.summarize(content)
 
 
 class SummarizerBuilder:
