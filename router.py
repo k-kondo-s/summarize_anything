@@ -55,5 +55,5 @@ class Router:
 
     def judge(self, comment: str) -> dict:
         judge_result = self.chain.invoke(comment)
-        logger.info("Judge result: %s", judge_result)
+        logger.info(f"Judge result: {judge_result}")
         return judge_result

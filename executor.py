@@ -13,13 +13,13 @@ class Executor:
 
     def execute(self, comment: str) -> str | None:
         judge_result = self.router.judge(comment)
-        logger.info("Judge result: %s", judge_result)
 
         if judge_result["summary_required"]:
             summarizer = self.builder.build_summarizer(judge_result["method"])
             summarized_text = summarizer.summarize(judge_result["url"])
-            logger.info("Summarized text: %s", summarized_text)
+            logger.info(f"Summarized text: {summarized_text}")
             return summarized_text
+        logger.info("No summarization required")
         return None
 
 

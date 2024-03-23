@@ -45,9 +45,9 @@ async def on_message(message):
         return
 
     if message.channel.id == DISCORD_ALLOWED_CHANNEL_ID:
-        logger.info("Received message: %s", message.clean_content)
+        logger.info(f"Received message: {message.clean_content}")
         executor_result = executor.execute(message.clean_content)
-        logger.info("Executor result: %s", executor_result)
+        logger.info(f"Executor result: {executor_result}")
         if executor_result:
             await message.reply(executor_result)
 
