@@ -7,7 +7,7 @@ A Discord bot that summarizes texts, articles on the Internet, YouTube movies an
 1. Clone the repository:
 
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/k-kondo-s/summarize_anything
    ```
 
 2. Install the dependencies:
@@ -57,9 +57,4 @@ A Discord bot that summarizes texts, articles on the Internet, YouTube movies an
 
 3. Linting and formatting:
 
-   This project uses flake8 for linting and black for formatting. You can run them with the following commands:
-
-   ```bash
-   flake8 .
-   black .
-   ```
+Using ruff.
