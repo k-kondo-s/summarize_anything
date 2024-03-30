@@ -29,7 +29,8 @@ PROMPT_TEXT_SUMMARIER = """
 class TextSummarizer:
     def __init__(self):
         self.prompt = ChatPromptTemplate.from_template(PROMPT_TEXT_SUMMARIER)
-        # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 4096 に設定する。
+        # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2000 に設定する。
+        # 2000 以下にしないと Discord のメッセージ上限に引っかかる。
         self.model = ChatAnthropic(
             model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
         )
