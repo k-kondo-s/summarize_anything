@@ -13,8 +13,14 @@ from method_type import MethodType
 logger = logging.getLogger(__name__)
 
 PROMPT_TEXT_SUMMARIER = """
-文章を日本語で要約して。要約の仕方は、複数のポイントに対してそれぞれ詳しく説明するかんじ。
-「ポイント1」「ポイント2」という具合に:
+以下の文章の要点を抽出して、それぞれに対して詳細に説明をして。
+
+制約条件:
+- 要約以外の情報は不要
+- bullet に数字は使わない
+
+品質を上げるヒント:
+- 本文の中に具体例がある場合はそれを含めると良い。必要に応じてそのまま引用する。
 ---
 {input}
 """
@@ -23,8 +29,10 @@ PROMPT_TEXT_SUMMARIER = """
 class TextSummarizer:
     def __init__(self):
         self.prompt = ChatPromptTemplate.from_template(PROMPT_TEXT_SUMMARIER)
-        # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2048 に設定する。
-        self.model = ChatAnthropic(model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=2048)
+        # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 4096 に設定する。
+        self.model = ChatAnthropic(
+            model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
+        )
         self.output_parser = StrOutputParser()
         self.chain = self.prompt | self.model | self.output_parser
 
@@ -78,7 +86,9 @@ class YouTubeSummarizer(BaseSummarizer):
 
     def _get_youtube_content(self, url: str) -> str:
         video_id = self._get_video_id(url)
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=["ja", "en"])
+        transcript = YouTubeTranscriptApi.get_transcript(
+            video_id, languages=["ja", "en"]
+        )
         content = ""
         for i in transcript:
             content += i["text"]
@@ -122,7 +132,6 @@ class ArXivSummarizer(BaseSummarizer):
 
 
 class SummarizerBuilder:
-
     def build_summarizer(self, method: str) -> BaseSummarizer | None:
         text_summarizer = TextSummarizer()
         summerizer_map = {
