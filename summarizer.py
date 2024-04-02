@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 
-import requests
+import cloudscraper
 from bs4 import BeautifulSoup
 from langchain_anthropic import ChatAnthropic
 from langchain_core.output_parsers import StrOutputParser
@@ -26,6 +26,16 @@ PROMPT_TEXT_SUMMARIER = """
 """
 
 
+class HTTPClient:
+    def __init__(self) -> None:
+        self.client = cloudscraper.create_scraper()
+
+    def get(self, url: str) -> str:
+        html_content = self.client.get(url).text
+        body_text = BeautifulSoup(html_content, "html.parser").get_text()
+        return body_text
+
+
 class TextSummarizer:
     def __init__(self):
         self.prompt = ChatPromptTemplate.from_template(PROMPT_TEXT_SUMMARIER)
@@ -48,24 +58,14 @@ class BaseSummarizer(ABC):
 
 
 class WebSummarizer(BaseSummarizer):
-    def __init__(self, text_summarizer: TextSummarizer) -> None:
+    def __init__(
+        self, text_summarizer: TextSummarizer, http_client: HTTPClient
+    ) -> None:
         self.text_summrizer = text_summarizer
-
-    def _reqest_get(self, url: str) -> str:
-        """Send a GET request to the given URL and retrieve the body of the page."""
-        response = requests.get(url)
-        html_content = response.text
-
-        # Create a BeautifulSoup object
-        soup = BeautifulSoup(html_content, "html.parser")
-
-        # Get the body text
-        body_text = soup.get_text()
-
-        return body_text
+        self.http_client = http_client
 
     def summarize(self, url: str) -> str:
-        body_text = self._reqest_get(url)
+        body_text = self.http_client.get(url)
         return self.text_summrizer.summarize(body_text)
 
 
@@ -101,8 +101,11 @@ class YouTubeSummarizer(BaseSummarizer):
 
 
 class ArXivSummarizer(BaseSummarizer):
-    def __init__(self, text_summarizer: TextSummarizer) -> None:
+    def __init__(
+        self, text_summarizer: TextSummarizer, http_client: HTTPClient
+    ) -> None:
         self.text_summrizer = text_summarizer
+        self.http_client = http_client
 
     def _modify_arxiv_url(self, url: str) -> str:
         """
@@ -114,31 +117,20 @@ class ArXivSummarizer(BaseSummarizer):
         """
         return url.replace("arxiv.org", "ar5iv.org")
 
-    def _get_arxiv_content(self, url: str) -> str:
-        response = requests.get(url)
-        html_content = response.text
-
-        # BeautifulSoupオブジェクトを作成
-        soup = BeautifulSoup(html_content, "html.parser")
-
-        # ボディテキストを取得
-        body_text = soup.get_text()
-
-        return body_text
-
     def summarize(self, url: str) -> str:
         modified_url = self._modify_arxiv_url(url)
-        body_text = self._get_arxiv_content(modified_url)
+        body_text = self.http_client.get(modified_url)
         return self.text_summrizer.summarize(body_text)
 
 
 class SummarizerBuilder:
     def build_summarizer(self, method: str) -> BaseSummarizer | None:
         text_summarizer = TextSummarizer()
+        http_client = HTTPClient()
         summerizer_map = {
-            MethodType.WEB.value: WebSummarizer(text_summarizer),
+            MethodType.WEB.value: WebSummarizer(text_summarizer, http_client),
             MethodType.YOUTUBE.value: YouTubeSummarizer(text_summarizer),
-            MethodType.ARXIV.value: ArXivSummarizer(text_summarizer),
+            MethodType.ARXIV.value: ArXivSummarizer(text_summarizer, http_client),
             MethodType.NONE.value: None,
         }
         return summerizer_map[method]

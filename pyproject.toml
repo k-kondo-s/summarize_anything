@@ -14,6 +14,7 @@ youtube-transcript-api = "^0.6.2"
 beautifulsoup4 = "^4.12.3"
 discord = "^2.3.2"
 python-dotenv = "^1.0.1"
+cloudscraper = "^1.2.71"
 
 
 [tool.poetry.group.dev.dependencies]
