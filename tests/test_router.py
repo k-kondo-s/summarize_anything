@@ -6,10 +6,17 @@ from router import Router
 @pytest.mark.parametrize(
     "comment, expected_output",
     [
-        ("This is a test comment", {"summary_required": False, "url": "", "method": "None"}),
+        (
+            "This is a test comment",
+            {"summary_required": False, "url": "", "method": "None"},
+        ),
         (
             "Check out this video: https://www.youtube.com/watch?v=123456",
-            {"summary_required": True, "url": "https://www.youtube.com/watch?v=123456", "method": "YouTube"},
+            {
+                "summary_required": True,
+                "url": "https://www.youtube.com/watch?v=123456",
+                "method": "YouTube",
+            },
         ),
         (
             "Here's a presentation: https://speakerdeck.com/snoozer05/software-architecture-metrics-in-a-nutshell",
@@ -29,7 +36,11 @@ from router import Router
         ),
         (
             "This is a good paper: https://arxiv.org/abs/2202.12493",
-            {"summary_required": True, "url": "https://arxiv.org/abs/2202.12493", "method": "arXiv"},
+            {
+                "summary_required": True,
+                "url": "https://arxiv.org/abs/2202.12493",
+                "method": "arXiv",
+            },
         ),
     ],
 )

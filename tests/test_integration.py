@@ -16,7 +16,7 @@ from executor import ExecutorBuilder
         # "https://t.co/EAnnqjBjJG",
         # "https://t.co/YCQdN1m961",
         "http://arxiv.org/abs/2202.12493",
-        "https://www.youtube.com/watch?v=Rb7xxfRRpQY"
+        "https://www.youtube.com/watch?v=Rb7xxfRRpQY",
     ],
 )
 def test_integration(comment):

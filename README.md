@@ -33,11 +33,11 @@ A Discord bot that summarizes texts, articles on the Internet, YouTube movies an
    LANGCHAIN_API_KEY=""
    ```
 
-   4. Run the bot:
+4. Run the bot:
 
-   ```bash
-   python discord_launcher.py
-   ```
+```bash
+python discord_launcher.py
+```
 
 ## Development
 
