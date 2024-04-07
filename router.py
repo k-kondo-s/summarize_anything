@@ -1,59 +1,61 @@
 import logging
 
-from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
 
-from method_type import MethodType
-
 logger = logging.getLogger(__name__)
 
-PROMPT = """
-{comment}
+
+PROMPT_URL_EXTRACTOR = """
+以下のコメントから、「人間が URL だと認識する文字列」を抽出して。
+例えば、不自然に URL 文字列が途切れているならば、それを修正して抽出すること。
+クエリパラメータが含まれている場合は、それを含めて抽出すること。
+そうしたものが存在しなければ ”NONE” と返して。
 ---
-このコメントがサマリを必要としているかを判定したい。サマリを必要としている場合は、サマル対象の URL とサマリの方法を返す。
-
-例:
-comment: ブログ書いたよ
-output: False, "", "None"
-
-comment: https://www.youtube.com/watch?v=123456
-output: True, "https://www.youtube.com/watch?v=123456", YouTube
-
-comment: 良い論文だ https://arxiv.org/abs/2202.12493
-output: True, "https://arxiv.org/abs/2202.12493", arXiv
-
-comment: https://qiita.com/kenji-kondo/items/91ae417ad858ec4652e7 これは僕が書いたやつ
-output: True, "https://qiita.com/kenji-kondo/items/91ae417ad858ec4652e7", Web
-
-
-{format_instruction}
+{comment}
 """
 
 
-class Router:
-
-    class OutputFormat(BaseModel):
-        """Output format of the router"""
-
-        summary_required: bool = Field(description="Summary Required if URL string is included in the comment")
-        url: str = Field(description="URL")
-        method: MethodType = Field(description="Kind of method to summarize the URL")
-
-    def __init__(self):
-        json_outputparser = JsonOutputParser(pydantic_object=self.OutputFormat)
+class URLExtractor:
+    def __init__(self, system_prompt: str = PROMPT_URL_EXTRACTOR) -> None:
+        outputparser = StrOutputParser()
         context = {
-            "format_instruction": lambda x: json_outputparser.get_format_instructions(),
             "comment": RunnablePassthrough(),
         }
-        prompt = ChatPromptTemplate.from_messages([("user", PROMPT)])
+        prompt = ChatPromptTemplate.from_messages([("user", system_prompt)])
+        model = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0125")
+        self.chain = context | prompt | model | outputparser
 
-        model = ChatOpenAI(temperature=0, model="gpt-4-0125-preview")
-        self.chain = context | prompt | model | json_outputparser
+    def extract(self, comment: str) -> str | None:
+        extracted_url = self.chain.invoke(comment)
+        if extracted_url == "NONE":
+            logger.info("No URL extracted")
+            return None
+        logger.info(f"Extracted URL: {extracted_url}")
+        return extracted_url
 
-    def judge(self, comment: str) -> dict:
-        judge_result = self.chain.invoke(comment)
-        logger.info(f"Judge result: {judge_result}")
-        return judge_result
+
+PROMPT_DISPATCHER = """
+以下に与えられた URL が、以下のどれにカテゴライズするかを判定して、その結果を文字列で返して。
+何にも当てはまらない場合は ”Web” と返して。
+- "YouTube": YouTube 動画
+- "arXiv": arXiv の論文
+- "Web": 一般的な Web ページ
+---
+{url}
+"""
+
+
+class Dispatcher:
+    def __init__(self, system_prompt: str = PROMPT_DISPATCHER) -> None:
+        outputparser = StrOutputParser()
+        prompt = ChatPromptTemplate.from_messages([("user", system_prompt)])
+        model = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0125")
+        self.chain = prompt | model | outputparser
+
+    def dispatch(self, url: str) -> str:
+        method = self.chain.invoke(url)
+        logger.info(f"Dispatched method: {method}")
+        return method

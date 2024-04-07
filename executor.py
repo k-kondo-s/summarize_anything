@@ -1,26 +1,35 @@
 import logging
 
-from router import Router
+from router import Dispatcher, URLExtractor
 from summarizer import SummarizerBuilder, TextSummarizer
 
 logger = logging.getLogger(__name__)
 
 
 class Executor:
-    def __init__(self, builder: SummarizerBuilder, router: Router) -> None:
+    def __init__(
+        self,
+        builder: SummarizerBuilder,
+        url_extractor: URLExtractor,
+        dispatcher: Dispatcher,
+    ) -> None:
         self.builder = builder
-        self.router = router
+        self.url_extractor = url_extractor
+        self.dispatcher = dispatcher
 
     def execute(self, comment: str) -> str | None:
-        judge_result = self.router.judge(comment)
+        extracted_url = self.url_extractor.extract(comment)
+        if extracted_url is None:
+            logger.info("No URL extracted")
+            return None
 
-        if judge_result["summary_required"]:
-            summarizer = self.builder.build_summarizer(judge_result["method"])
-            summarized_text = summarizer.summarize(judge_result["url"])
-            logger.info(f"Summarized text: {summarized_text}")
-            return summarized_text
-        logger.info("No summarization required")
-        return None
+        category = self.dispatcher.dispatch(extracted_url)
+        logger.info(f"Category: {category}")
+
+        summarizer = self.builder.build_summarizer(category)
+        summarized_text = summarizer.summarize(extracted_url)
+        logger.info(f"Summarized text: {summarized_text}")
+        return summarized_text
 
 
 class SimpleExecutor:
@@ -34,7 +43,7 @@ class SimpleExecutor:
 class ExecutorBuilder:
     @staticmethod
     def build() -> Executor:
-        return Executor(SummarizerBuilder(), Router())
+        return Executor(SummarizerBuilder(), URLExtractor(), Dispatcher())
 
     @staticmethod
     def build_simple() -> SimpleExecutor:
