@@ -38,6 +38,7 @@ from tests.data import long_long_text
     ],
 )
 def test_request_get(url, expected_included_str):
+    """GET した中に expected_included_str が含まれているか"""
     # Arrange
     http_client = HTTPClient()
 
