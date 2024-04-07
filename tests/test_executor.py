@@ -9,14 +9,10 @@ from executor import ExecutorBuilder
     "comment",
     [
         # # お金がかかるので、必要なやつだけコメントアウトする
-        # "https://youtu.be/MdnmXc5JBjc",
-        # "https://t.co/xjHmAohfqg"
-        # "https://www.technologyreview.com/2024/03/04/1089403/large-language-models-amazing-but-nobody-knows-why/"
-        # "https://qiita.com/jw-automation/items/045917be7b558509fdf2"  # Qiita: RAGの実装戦略まとめ
-        # "https://t.co/EAnnqjBjJG",
+        # "https://qiita.com/jw-automation/items/045917be7b558509fdf2",  # Qiita: RAGの実装戦略まとめ
         # "http://arxiv.org/abs/2202.12493",  # スーパーカミオカンデの論文
-        # "https://www.youtube.com/watch?v=Rb7xxfRRpQY",
-        "エラー"
+        # "https://www.youtube.com/watch?v=Rb7xxfRRpQY",  # あやしい集中法の動画
+        # "エラー",  # 何も返してほしくないコメント
     ],
 )
 def test_Excecutor(comment):
