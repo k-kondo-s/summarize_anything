@@ -47,6 +47,16 @@ from router import Dispatcher, URLExtractor
             "https://arxiv.org/abs/22\n02.12493",  # 改行が誤って入ってしまっている
             "https://arxiv.org/abs/2202.12493",
         ),
+        (
+            "ttps",
+            "ttps://arxiv.org/abs/2202.12493",
+            "https://arxiv.org/abs/2202.12493",
+        ),  # 先頭 h がない
+        # (
+        #     "two_url",
+        #     "https://arxiv.org/abs/2202.12493 とか https://qiita.com/kenji-kondo/items/91ae417ad858ec4652e7",
+        #     "このケースどうしようかな。2つあるときは抽出しない、というのがいいかもしれない"
+        # ),
     ],
 )
 def test_URLExtractor(description, comment, expected_output):
