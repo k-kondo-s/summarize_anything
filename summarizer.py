@@ -1,4 +1,5 @@
 import logging
+import os
 from abc import ABC, abstractmethod
 
 import cloudscraper
@@ -6,7 +7,9 @@ from bs4 import BeautifulSoup
 from langchain_anthropic import ChatAnthropic
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from openai import OpenAI
 from youtube_transcript_api import YouTubeTranscriptApi
+from yt_dlp import YoutubeDL
 
 from method_type import MethodType
 
@@ -88,6 +91,7 @@ class YouTubeSummarizer(BaseSummarizer):
         raise ValueError(f"Invalid URL format: {url}")
 
     def _get_youtube_content(self, url: str) -> str:
+        """deprecated"""
         video_id = self._get_video_id(url)
         transcript = YouTubeTranscriptApi.get_transcript(
             video_id, languages=["ja", "en"]
@@ -97,8 +101,40 @@ class YouTubeSummarizer(BaseSummarizer):
             content += i["text"]
         return content
 
+    def _download_audio(self, url: str) -> str:
+        # audio を mp3 ではなく m4a にしているのは、若干 m4a の方がファイルサイズが小さくなるため
+        ydl_opts = {
+            "format": "m4a/bestaudio/best",
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "m4a",
+                }
+            ],
+            "outtmpl": "audio.m4a",
+        }
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        return "audio.m4a"
+
+    def _transcribe_audio(self, audio_file: str) -> str:
+        # Whisper を使う理由は、文字起こしの性能が普通より高いことと、たまに日本語の subtitle に対応していない
+        # 動画も存在するから。デメリットは遅くなること。
+        client = OpenAI()
+        audio_file = open(audio_file, "rb")
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1", file=audio_file
+        )
+        return transcription.text
+
+    def _post_processing(self) -> None:
+        """ダウンロードした audio ファイルを削除する"""
+        os.remove("audio.m4a")
+
     def summarize(self, url: str) -> str:
-        content = self._get_youtube_content(url)
+        audio_file = self._download_audio(url)
+        content = self._transcribe_audio(audio_file)
+        self._post_processing()
         return self.text_summrizer.summarize(content)
 
 
