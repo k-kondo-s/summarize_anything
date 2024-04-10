@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from langchain_anthropic import ChatAnthropic
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from pptx import Presentation
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from method_type import MethodType
@@ -123,6 +124,30 @@ class ArXivSummarizer(BaseSummarizer):
         modified_url = self._modify_arxiv_url(url)
         body_text = self.http_client.get(modified_url)
         return self.text_summrizer.summarize(body_text)
+
+
+class PPTSummarizer(BaseSummarizer):
+    def __init__(self, text_summarizer: TextSummarizer) -> None:
+        self.text_summrizer = text_summarizer
+
+    def extract_text_from_slide(self, slide):
+        text = ""
+        for shape in slide.shapes:
+            if hasattr(shape, "text"):
+                text += shape.text + "\n"
+        return text
+
+    def extract_text_from_presentation(self, pptx_path: str):
+        prs = Presentation(pptx_path)
+        text = ""
+        for slide in prs.slides:
+            text += self.extract_text_from_slide(slide)
+        return text
+
+    def summarize(self, pptx_path: str) -> str:
+        text = self.extract_text_from_presentation(pptx_path)
+        result = self.text_summrizer.summarize(text)
+        return result
 
 
 class SummarizerBuilder:
