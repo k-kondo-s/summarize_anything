@@ -1,0 +1,9 @@
+.dockerignore
+# .env は残す。というのも、 .gitignore には含まれていないので本番は影響なし。一方ローカルは .env が必要なので。
+.git
+.gitignore
+.pytest_cache
+.python-version
+.venv
+.vscode
+__pycache__
