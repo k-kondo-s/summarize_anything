@@ -8,6 +8,8 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from openai import OpenAI
+from pydub import AudioSegment
+from pydub.utils import make_chunks
 from youtube_transcript_api import YouTubeTranscriptApi
 from yt_dlp import YoutubeDL
 
@@ -79,6 +81,7 @@ class YouTubeSummarizer(BaseSummarizer):
         self.text_summrizer = text_summarizer
 
     def _get_video_id(self, url: str) -> str:
+        """deprecated"""
         # いくつか異なる形式の URL に対応する
         # まず https://www.youtube.com/watch?v=xxxxx 形式の URL から video_id を取得する
         if "v=" in url:
@@ -90,9 +93,8 @@ class YouTubeSummarizer(BaseSummarizer):
         logger.error(f"Invalid URL format: {url}")
         raise ValueError(f"Invalid URL format: {url}")
 
-    def _get_youtube_content(self, url: str) -> str:
+    def _get_youtube_content(self, video_id: str) -> str:
         """deprecated"""
-        video_id = self._get_video_id(url)
         transcript = YouTubeTranscriptApi.get_transcript(
             video_id, languages=["ja", "en"]
         )
@@ -101,23 +103,40 @@ class YouTubeSummarizer(BaseSummarizer):
             content += i["text"]
         return content
 
+    def transcribe_with_youtube_transcript_api(self, url: str) -> str:
+        video_id = self._get_video_id(url)
+        content = self._get_youtube_content(video_id)
+        return content
+
     def _download_audio(self, url: str) -> str:
-        # audio を mp3 ではなく m4a にしているのは、若干 m4a の方がファイルサイズが小さくなるため
         ydl_opts = {
-            "format": "m4a/bestaudio/best",
+            "format": "bestaudio/best",
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
-                    "preferredcodec": "m4a",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "192",
                 }
             ],
-            "outtmpl": "audio.m4a",
+            "outtmpl": "audio",
         }
+
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-        return "audio.m4a"
 
-    def _transcribe_audio(self, audio_file: str) -> str:
+        return "audio.mp3"
+
+    def transcribe_with_whisper(self, url: str) -> str:
+        audio_file = self._download_audio(url)
+        # 10 分ごとに分割する
+        audio_files = self._split_audio(audio_file)
+        content = ""
+        for audio_file in audio_files:
+            content += self._transcribe(audio_file)
+        self._post_processing(audio_files)
+        return content
+
+    def _transcribe(self, audio_file: str) -> str:
         # Whisper を使う理由は、文字起こしの性能が普通より高いことと、たまに日本語の subtitle に対応していない
         # 動画も存在するから。デメリットは遅くなること。
         client = OpenAI()
@@ -125,16 +144,33 @@ class YouTubeSummarizer(BaseSummarizer):
         transcription = client.audio.transcriptions.create(
             model="whisper-1", file=audio_file
         )
+        logger.info("Transcripted.")
         return transcription.text
 
-    def _post_processing(self) -> None:
+    def _split_audio(self, audio_file: str) -> list[str]:
+        audio = AudioSegment.from_file(audio_file, format="mp3")
+        chunk_length_ms = 10 * 60 * 1000
+        chunks = make_chunks(audio, chunk_length_ms)
+        audio_files = []
+        for i, chunk in enumerate(chunks):
+            chunk.export(f"audio_{i}.mp3", format="mp3")
+            audio_files.append(f"audio_{i}.mp3")
+        return audio_files
+
+    def _post_processing(self, audio_files) -> None:
         """ダウンロードした audio ファイルを削除する"""
-        os.remove("audio.m4a")
+        os.remove("audio.mp3")
+        for audio_file in audio_files:
+            os.remove(audio_file)
+        logger.info("Removed audio files.")
 
     def summarize(self, url: str) -> str:
-        audio_file = self._download_audio(url)
-        content = self._transcribe_audio(audio_file)
-        self._post_processing()
+        try:
+            logger.info("Try to transcribe with YouTubeTranscriptAPI.")
+            content = self.transcribe_with_youtube_transcript_api(url)
+        except Exception:
+            logger.info("Failed to transcribe with YouTubeTranscriptAPI. Use Whisper.")
+            content = self.transcribe_with_whisper(url)
         return self.text_summrizer.summarize(content)
 
 

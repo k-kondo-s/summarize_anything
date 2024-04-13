@@ -64,12 +64,17 @@ def test_arxiv_summarizer():
 
 
 @pytest.mark.parametrize(
-    ("url"),
+    ("description, url"),
     [
-        "https://www.youtube.com/watch?v=TMO4NH8HAHQ",
+        (
+            "short",
+            "https://www.youtube.com/watch?v=TMO4NH8HAHQ",
+        ),  # 高校に行くことの重要性と自分自身の経験(短め)
+        ("long", "https://youtu.be/6zTVb_PiHuQ?si=o_sahEQGcr_aRJhp"),  # pivot (長め)
+        ("hindi", "https://www.youtube.com/watch?v=R58A_MQtvw8&t=609s"),  # ヒンディー語
     ],
 )
-def test_youtube_summarizer(url):
+def test_youtube_summarizer(description, url):
     """YouTubeSummarizer の summarize が正常終了するか"""
     # Arrange
     summarizer = YouTubeSummarizer(TextSummarizer())
