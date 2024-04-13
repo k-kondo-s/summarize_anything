@@ -63,13 +63,19 @@ def test_arxiv_summarizer():
     assert len(result) > 0
 
 
-def test_youtube_summarizer():
+@pytest.mark.parametrize(
+    ("url"),
+    [
+        "https://www.youtube.com/watch?v=TMO4NH8HAHQ",
+    ],
+)
+def test_youtube_summarizer(url):
     """YouTubeSummarizer の summarize が正常終了するか"""
     # Arrange
     summarizer = YouTubeSummarizer(TextSummarizer())
 
     # Act
-    result = summarizer.summarize("https://www.youtube.com/watch?v=Rb7xxfRRpQY")
+    result = summarizer.summarize(url)
     print(result)
 
     # Assert
