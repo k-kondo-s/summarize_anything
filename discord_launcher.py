@@ -14,13 +14,15 @@ class GatewayEventFilter(logging.Filter):
         super().__init__("discord.gateway")
 
     def filter(self, record: logging.LogRecord) -> bool:
-        if record.exc_info is not None and isinstance(record.exc_info[1], discord.ConnectionClosed):
+        if record.exc_info is not None and isinstance(
+            record.exc_info[1], discord.ConnectionClosed
+        ):
             return False
         return True
 
 
 logging.getLogger("discord.gateway").addFilter(GatewayEventFilter())
-logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)  # ログを標準出力に出す
 logger = logging.getLogger(__name__)
 
 load_dotenv()
@@ -29,7 +31,9 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-DISCORD_ALLOWED_CHANNEL_ID_LIST: list[int] = [int(i) for i in os.getenv("DISCORD_ALLOWED_CHANNEL_ID_LIST").split(",")]
+DISCORD_ALLOWED_CHANNEL_ID_LIST: list[int] = [
+    int(i) for i in os.getenv("DISCORD_ALLOWED_CHANNEL_ID_LIST").split(",")
+]
 print(DISCORD_ALLOWED_CHANNEL_ID_LIST)
 DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN")
 
