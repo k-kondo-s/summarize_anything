@@ -4,6 +4,8 @@ A Discord bot that summarizes texts, articles on the Internet, YouTube movies an
 
 ## Quickstart
 
+0. ffmpeg をインストールしといて
+
 1. Clone the repository:
 
    ```bash
