@@ -1,5 +1,15 @@
 # Summarize Anything
 
+
+## 実行 routine
+
+```
+docker stop summarizer
+docker rm summarizer
+docker pull kenchaaan/summarize_anything:v1
+docker run -d --name summarizer --platform=linux/arm64/v8 --env-file ~/work/codes/summarize_anything_server/.env  kenchaaan/summarize_anything:v1
+```
+
 A Discord bot that summarizes texts, articles on the Internet, YouTube movies and papers on arXiv and so on, using the [Langchain API](https://langchain.com/).
 
 ## Quickstart
