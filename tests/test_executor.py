@@ -13,7 +13,8 @@ from executor import ExecutorBuilder
         # "http://arxiv.org/abs/2202.12493",  # スーパーカミオカンデの論文
         # "https://www.youtube.com/watch?v=Rb7xxfRRpQY",  # あやしい集中法の動画
         # "エラー",  # 何も返してほしくないコメント
-        "https://m.youtube.com/watch?v=sal78ACtGTc",  # 中国語になってしまってたやつ
+        # "https://m.youtube.com/watch?v=sal78ACtGTc",  # 中国語になってしまってたやつ
+        "https://www.youtube.com/watch?v=wM5837pVh1g",  # Andrew Ng の Agentic Workflow の動画
     ],
 )
 def test_Excecutor(comment):

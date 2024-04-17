@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import cloudscraper
 from bs4 import BeautifulSoup
 from langchain_anthropic import ChatAnthropic
+from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from openai import OpenAI
@@ -17,7 +18,18 @@ from method_type import MethodType
 
 logger = logging.getLogger(__name__)
 
-PROMPT_TEXT_SUMMARIER = """
+
+class HTTPClient:
+    def __init__(self) -> None:
+        self.client = cloudscraper.create_scraper()
+
+    def get(self, url: str) -> str:
+        html_content = self.client.get(url).text
+        body_text = BeautifulSoup(html_content, "html.parser").get_text()
+        return body_text
+
+
+PROMPT_WRITER_TEXT_SUMMARIER = """
 以下の文章の要点を抽出して、それぞれに対して詳細に説明をして。
 
 制約条件:
@@ -32,30 +44,49 @@ PROMPT_TEXT_SUMMARIER = """
 {input}
 """
 
+PROMPT_REVISER_TEXT_SUMMARIER = """
+{target_text}
+---
 
-class HTTPClient:
-    def __init__(self) -> None:
-        self.client = cloudscraper.create_scraper()
+上の文章が要約として適切かどうかを判断し、適切ではない場合は【資料】に基づいて修正して。
 
-    def get(self, url: str) -> str:
-        html_content = self.client.get(url).text
-        body_text = BeautifulSoup(html_content, "html.parser").get_text()
-        return body_text
+- 要点に対して、もっと詳細に説明する。
+- 本文の中に具体例がある場合はそれを含める。必要に応じてそのまま引用する。
+- 修正する際は、【資料】に基づいて正確な情報を提供すること。
+---
+【資料】
+{input}
+"""
 
 
 class TextSummarizer:
     def __init__(self):
-        self.prompt = ChatPromptTemplate.from_template(PROMPT_TEXT_SUMMARIER)
+        self.writer_chain = self.build_writer_chain()
+        self.reviser_chain = self.build_reviser_chain()
+
+    def build_writer_chain(self) -> BaseChatModel:
+        self.prompt = ChatPromptTemplate.from_template(PROMPT_WRITER_TEXT_SUMMARIER)
         # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2000 に設定する。
         # 2000 以下にしないと Discord のメッセージ上限に引っかかる。
         self.model = ChatAnthropic(
             model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
         )
         self.output_parser = StrOutputParser()
-        self.chain = self.prompt | self.model | self.output_parser
+        return self.prompt | self.model | self.output_parser
+
+    def build_reviser_chain(self) -> BaseChatModel:
+        self.prompt = ChatPromptTemplate.from_template(PROMPT_REVISER_TEXT_SUMMARIER)
+        # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2000 に設定する。
+        # 2000 以下にしないと Discord のメッセージ上限に引っかかる。
+        self.model = ChatAnthropic(
+            model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
+        )
+        self.output_parser = StrOutputParser()
+        return self.prompt | self.model | self.output_parser
 
     def summarize(self, input):
-        return self.chain.invoke({"input": input})
+        target_text = self.writer_chain.invoke({"input": input})
+        return self.reviser_chain.invoke({"target_text": target_text, "input": input})
 
 
 class BaseSummarizer(ABC):
