@@ -1,0 +1,6 @@
+ssh  kondoukenji@kmac << EOF
+  docker pull kenchaaan/summarize_anything:v1
+  docker stop summarizer
+  docker rm summarizer
+  docker run -d --name summarizer --platform=linux/arm64/v8 --env-file ~/work/codes/summarize_anything_server/.env  kenchaaan/summarize_anything:v1
+EOF
