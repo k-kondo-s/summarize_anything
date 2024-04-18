@@ -39,6 +39,7 @@ class URLExtractor:
 
 PROMPT_DISPATCHER = """
 以下に与えられた URL が、以下のどれにカテゴライズするかを判定して、その結果を文字列で返して。
+返すのは文字列だけで、それ以外の情報は不要。
 何にも当てはまらない場合は ”Web” と返して。
 - "YouTube": YouTube 動画
 - "arXiv": arXiv の論文
