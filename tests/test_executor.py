@@ -15,7 +15,7 @@ from executor import ExecutorBuilder
         # "エラー",  # 何も返してほしくないコメント
         # "https://m.youtube.com/watch?v=sal78ACtGTc",  # 中国語になってしまってたやつ
         # "https://www.youtube.com/watch?v=wM5837pVh1g",  # Andrew Ng の Agentic Workflow の動画
-        "https://arxiv.org/pdf/2306.11644.pdf",
+        "https://arxiv.org/abs/2404.11018",
     ],
 )
 def test_Excecutor(comment):
