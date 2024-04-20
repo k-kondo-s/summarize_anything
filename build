@@ -1,2 +1,7 @@
+#!/bin/sh
+
+# Build the Docker image
 docker build --no-cache --tag kenchaaan/summarize_anything:v1 .
+
+# Push the Docker image to the registry
 docker push kenchaaan/summarize_anything:v1
