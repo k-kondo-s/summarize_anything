@@ -4,10 +4,10 @@ from abc import ABC, abstractmethod
 
 import cloudscraper
 from bs4 import BeautifulSoup
-from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
 from openai import OpenAI
 from pydub import AudioSegment
 from pydub.utils import make_chunks
@@ -69,8 +69,12 @@ class TextSummarizer:
         self.prompt = ChatPromptTemplate.from_template(PROMPT_WRITER_TEXT_SUMMARIER)
         # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2000 に設定する。
         # 2000 以下にしないと Discord のメッセージ上限に引っかかる。
-        self.model = ChatAnthropic(
-            model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
+        # self.model = ChatAnthropic(
+        #     model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
+        # )
+        # 今は limit がなくなったので、急場しのぎで GPT-4 を使う
+        self.model = ChatOpenAI(
+            model="gpt-4-turbo-2024-04-09", temperature=0, max_tokens=4096
         )
         self.output_parser = StrOutputParser()
         return self.prompt | self.model | self.output_parser
@@ -79,8 +83,12 @@ class TextSummarizer:
         self.prompt = ChatPromptTemplate.from_template(PROMPT_REVISER_TEXT_SUMMARIER)
         # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2000 に設定する。
         # 2000 以下にしないと Discord のメッセージ上限に引っかかる。
-        self.model = ChatAnthropic(
-            model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
+        # self.model = ChatAnthropic(
+        #     model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
+        # )
+        # 今は limit がなくなったので、急場しのぎで GPT-4 を使う
+        self.model = ChatOpenAI(
+            model="gpt-4-turbo-2024-04-09", temperature=0, max_tokens=4096
         )
         self.output_parser = StrOutputParser()
         return self.prompt | self.model | self.output_parser
