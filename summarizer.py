@@ -70,7 +70,7 @@ class TextSummarizer:
         # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2000 に設定する。
         # 2000 以下にしないと Discord のメッセージ上限に引っかかる。
         self.model = ChatAnthropic(
-            model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
+            model="claude-3-5-sonnet-20240620", temperature=0, max_tokens_to_sample=4096
         )
 
         # # ちなみに GPT-4 でやる場合。
@@ -87,7 +87,7 @@ class TextSummarizer:
         # max_tokens_to_sample は、default の 1024 だと文章が切れることがあるみたいなので 2000 に設定する。
         # 2000 以下にしないと Discord のメッセージ上限に引っかかる。
         self.model = ChatAnthropic(
-            model="claude-3-opus-20240229", temperature=0, max_tokens_to_sample=4096
+            model="claude-3-5-sonnet-20240620", temperature=0, max_tokens_to_sample=4096
         )
         self.output_parser = StrOutputParser()
         return self.prompt | self.model | self.output_parser
