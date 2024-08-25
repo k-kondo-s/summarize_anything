@@ -116,7 +116,9 @@ class WebSummarizer(BaseSummarizer):
         self.http_client = http_client
 
     def summarize(self, url: str) -> str:
-        body_text = self.http_client.get(url)
+        # https://r.jina.ai/ を先頭につける
+        modified_url = f"https://r.jina.ai/{url}"
+        body_text = self.http_client.get(modified_url)
         return self.text_summrizer.summarize(body_text)
 
 
@@ -233,7 +235,9 @@ class ArXivSummarizer(BaseSummarizer):
            https://arxiv.org/abs/1910.06709
         -> https://ar5iv.org/abs/1910.06709
         """
-        return url.replace("arxiv.org", "ar5iv.org")
+        replaced_url = url.replace("arxiv.org", "ar5iv.org")
+        # https://r.jina.ai/ を先頭につける
+        return f"https://r.jina.ai/{replaced_url}"
 
     def summarize(self, url: str) -> str:
         modified_url = self._modify_arxiv_url(url)
