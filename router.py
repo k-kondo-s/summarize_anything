@@ -30,7 +30,9 @@ class URLExtractor:
 
     def extract(self, comment: str) -> str | None:
         extracted_url = self.chain.invoke(comment)
-        if extracted_url == "NONE":
+        # 抽出された URL が "NONE" であるか、"x.com" を含む場合は None を返す
+        # Twitter はコンテンツが読めないので、 URL を抽出する意味がない
+        if extracted_url == "NONE" or "x.com" in extracted_url:
             logger.info("No URL extracted")
             return None
         logger.info(f"Extracted URL: {extracted_url}")
