@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import sys
@@ -27,7 +28,7 @@ load_dotenv()
 
 intents = discord.Intents.default()
 intents.message_content = True
-client = discord.Client(intents=intents)
+client = discord.Client(intents=intents, reconnect=True)
 
 DISCORD_ALLOWED_CHANNEL_ID_LIST: list[int] = [
     int(i) for i in os.getenv("DISCORD_ALLOWED_CHANNEL_ID_LIST").split(",")
@@ -78,4 +79,14 @@ async def on_message(message):
             await message.reply(f"Error occurred. Details:\n{e.args}")
 
 
-client.run(DISCORD_BOT_TOKEN, log_handler=None, root_logger=True)
+async def main():
+    async with client:
+        await client.start(DISCORD_BOT_TOKEN)
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Bot stopped by user")
+    except Exception as e:
+        logger.error(f"Bot crashed: {e}", exc_info=True)
