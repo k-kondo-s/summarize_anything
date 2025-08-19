@@ -56,13 +56,14 @@ PROMPT_REVISER_TEXT_SUMMARIER = """
 {input}
 ---
 
-上の文章が要約として適切かどうかを判断し、適切ではない場合は【資料】に基づいて修正したバージョンを提供してください。
-修正する際は、【資料】に基づいて正確な情報を提供すること。
+現在の要約は {current_length} 文字です。Discord の文字数制限は 2000 文字なので、{over_length} 文字超過しています。
 
-- 要点に対して、もっと詳細に説明する。
-- 本文の中に具体例がある場合はそれを含める。必要に応じてそのまま引用する。
+以下の点に注意して、2000 文字以内に収まるように要約を修正してください：
+- 重要度の低い詳細説明を削除する
+- 冗長な表現を簡潔にする
+- 本質的な情報は維持する
+- 要点の数を減らしても構わない（最重要なものに絞る）
 - 可能な限り日本語で記述する
-- 2000 文字以内
 
 出力は、修正した文章のみを Markdown 形式で記述してください。つまり "以下は改善した文章です" といった前文は不要です。
 """
@@ -102,7 +103,39 @@ class TextSummarizer:
 
     def summarize(self, input):
         target_text = self.writer_chain.invoke({"input": input})
-        return self.reviser_chain.invoke({"target_text": target_text, "input": input})
+        
+        # 文字数をチェック
+        current_length = len(target_text)
+        if current_length <= 2000:
+            # 2000文字以内の場合は通常のreviserプロンプトを使用
+            prompt = ChatPromptTemplate.from_template("""
+{target_text}
+---
+【資料】
+{input}
+---
+
+上の文章が要約として適切かどうかを判断し、適切ではない場合は【資料】に基づいて修正したバージョンを提供してください。
+修正する際は、【資料】に基づいて正確な情報を提供すること。
+
+- 要点に対して、もっと詳細に説明する。
+- 本文の中に具体例がある場合はそれを含める。必要に応じてそのまま引用する。
+- 可能な限り日本語で記述する
+- 2000 文字以内
+
+出力は、修正した文章のみを Markdown 形式で記述してください。つまり "以下は改善した文章です" といった前文は不要です。
+""")
+            reviser_chain = prompt | self.model | self.output_parser
+            return reviser_chain.invoke({"target_text": target_text, "input": input})
+        else:
+            # 2000文字を超えている場合は文字数削減を促すプロンプトを使用
+            over_length = current_length - 2000
+            return self.reviser_chain.invoke({
+                "target_text": target_text, 
+                "input": input,
+                "current_length": current_length,
+                "over_length": over_length
+            })
 
 
 class BaseSummarizer(ABC):
