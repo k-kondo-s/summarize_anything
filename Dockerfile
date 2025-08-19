@@ -12,9 +12,14 @@ WORKDIR /app
 # Poetryの設定ファイルをコピー
 COPY pyproject.toml poetry.lock ./
 
+# Poetryの環境設定
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=0 \
+    POETRY_VIRTUALENVS_CREATE=0 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
 # 依存関係のインストール
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+RUN poetry install --no-interaction --no-ansi --no-root && rm -rf $POETRY_CACHE_DIR
 
 # アプリケーションのソースコードをコピー
 COPY . .
