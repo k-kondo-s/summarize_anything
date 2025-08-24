@@ -128,8 +128,6 @@ class TextSummarizer:
                 {
                     "target_text": target_text,
                     "input": input,
-                    "current_length": current_length,
-                    "over_length": over_length,
                 }
             )
 
