@@ -102,10 +102,13 @@ class TextSummarizer:
         if current_length <= 2000:
             # 2000文字以内の場合はそのまま返す
             return target_text
-        else:
-            # 2000文字を超えている場合は文字数削減を促すプロンプトを使用
-            logger.info("2000文字を超えている場合は文字数削減を促すプロンプトを使用")
+        
+        # 2000文字を超えている場合は最大3回まで文字数削減を試みる
+        max_retries = 3
+        for retry in range(max_retries):
+            logger.info(f"2000文字を超えているため文字数削減を試みる (試行 {retry + 1}/{max_retries})")
             over_length = current_length - 2000
+            
             prompt = ChatPromptTemplate.from_template("""
 {target_text}
 ---
@@ -115,16 +118,17 @@ class TextSummarizer:
 
 現在の要約は {current_length} 文字です。Discord の文字数制限は 2000 文字なので、{over_length} 文字超過しています。
 
-以下の点に注意して、2000 文字以内に収まるように要約を修正してください：
+以下の点に注意して、必ず2000文字以内に収まるように要約を修正してください：
 - 重要度の低い詳細説明を削除する
 - 冗長な表現を簡潔にする
 - 本質的な情報は維持する
 - 可能な限り日本語で記述する
+- 文字数制限を必ず守ること（これが最優先）
 
 出力は、修正した文章のみを Markdown 形式で記述してください。つまり "以下は改善した文章です" といった前文は不要です。
 """)
             reviser_chain = prompt | self.model | self.output_parser
-            return reviser_chain.invoke(
+            target_text = reviser_chain.invoke(
                 {
                     "target_text": target_text,
                     "input": input,
@@ -132,6 +136,18 @@ class TextSummarizer:
                     "over_length": over_length,
                 }
             )
+            
+            # 修正後の文字数をチェック
+            current_length = len(target_text)
+            if current_length <= 2000:
+                logger.info(f"文字数削減成功: {current_length}文字")
+                return target_text
+            else:
+                logger.warning(f"試行 {retry + 1} 後も文字数超過: {current_length}文字")
+        
+        # 3回試してもダメな場合は、強制的に2000文字で切る
+        logger.error("最大リトライ回数に達しました。強制的に2000文字で切断します。")
+        return target_text[:2000] + "\n\n[注意: 文字数制限により内容が切断されました]"
 
 
 class BaseSummarizer(ABC):
