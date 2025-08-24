@@ -100,26 +100,8 @@ class TextSummarizer:
         # 文字数をチェック
         current_length = len(target_text)
         if current_length <= 2000:
-            # 2000文字以内の場合は通常のreviserプロンプトを使用
-            prompt = ChatPromptTemplate.from_template("""
-{target_text}
----
-【資料】
-{input}
----
-
-上の文章が要約として適切かどうかを判断し、適切ではない場合は【資料】に基づいて修正したバージョンを提供してください。
-修正する際は、【資料】に基づいて正確な情報を提供すること。
-
-- 要点に対して、もっと詳細に説明する。
-- 本文の中に具体例がある場合はそれを含める。必要に応じてそのまま引用する。
-- 可能な限り日本語で記述する
-- 2000 文字以内
-
-出力は、修正した文章のみを Markdown 形式で記述してください。つまり "以下は改善した文章です" といった前文は不要です。
-""")
-            reviser_chain = prompt | self.model | self.output_parser
-            return reviser_chain.invoke({"target_text": target_text, "input": input})
+            # 2000文字以内の場合はそのまま返す
+            return target_text
         else:
             # 2000文字を超えている場合は文字数削減を促すプロンプトを使用
             over_length = current_length - 2000
