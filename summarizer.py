@@ -104,6 +104,7 @@ class TextSummarizer:
             return target_text
         else:
             # 2000文字を超えている場合は文字数削減を促すプロンプトを使用
+            logger.info("2000文字を超えている場合は文字数削減を促すプロンプトを使用")
             over_length = current_length - 2000
             prompt = ChatPromptTemplate.from_template("""
 {target_text}
