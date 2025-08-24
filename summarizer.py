@@ -81,12 +81,6 @@ class TextSummarizer:
             model="claude-sonnet-4-20250514", temperature=0, max_tokens_to_sample=4096
         )
 
-        # # ちなみに GPT-4 でやる場合。
-        # from langchain_openai import ChatOpenAI
-        # self.model = ChatOpenAI(
-        #     model="gpt-4-turbo-2024-04-09", temperature=0, max_tokens=4096
-        # )
-
         self.output_parser = StrOutputParser()
         return self.prompt | self.model | self.output_parser
 
@@ -102,7 +96,7 @@ class TextSummarizer:
 
     def summarize(self, input):
         target_text = self.writer_chain.invoke({"input": input})
-        
+
         # 文字数をチェック
         current_length = len(target_text)
         if current_length <= 2000:
@@ -129,12 +123,32 @@ class TextSummarizer:
         else:
             # 2000文字を超えている場合は文字数削減を促すプロンプトを使用
             over_length = current_length - 2000
-            return self.reviser_chain.invoke({
-                "target_text": target_text, 
-                "input": input,
-                "current_length": current_length,
-                "over_length": over_length
-            })
+            prompt = ChatPromptTemplate.from_template("""
+{target_text}
+---
+【資料】
+{input}
+---
+
+現在の要約は {current_length} 文字です。Discord の文字数制限は 2000 文字なので、{over_length} 文字超過しています。
+
+以下の点に注意して、2000 文字以内に収まるように要約を修正してください：
+- 重要度の低い詳細説明を削除する
+- 冗長な表現を簡潔にする
+- 本質的な情報は維持する
+- 可能な限り日本語で記述する
+
+出力は、修正した文章のみを Markdown 形式で記述してください。つまり "以下は改善した文章です" といった前文は不要です。
+""")
+            reviser_chain = prompt | self.model | self.output_parser
+            return reviser_chain.invoke(
+                {
+                    "target_text": target_text,
+                    "input": input,
+                    "current_length": current_length,
+                    "over_length": over_length,
+                }
+            )
 
 
 class BaseSummarizer(ABC):
